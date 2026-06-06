@@ -83,8 +83,18 @@ db_path = Path(settings.database_path)
 store = RestaurantStore(db_path)
 
 def main():
+    # Automatically run ingest if SQLite DB does not exist
+    if not db_path.is_file():
+        with st.spinner("⏳ First-time setup: Ingesting dataset from Hugging Face... (takes a few seconds)"):
+            try:
+                from app.ingest import ingest_to_sqlite
+                ingest_to_sqlite(db_path, settings)
+            except Exception as e:
+                st.error(f"Failed to ingest dataset: {e}")
+
     st.markdown('<div class="main-header">Zomato AI</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Hyper-personalized restaurant recommendations grounded in data.</div>', unsafe_allow_html=True)
+
 
     # --- Sidebar Filters ---
     with st.sidebar:
@@ -112,8 +122,9 @@ def main():
                 budget=BudgetBand(budget),
                 top_n=top_n,
                 min_rating=min_rating,
-                extra_context=extra_context
+                notes=extra_context
             )
+
             
             response = deterministic_recommend(store, request_body, settings=settings)
             
@@ -129,8 +140,17 @@ def main():
                     st.caption("⚖️ Deterministic Ranking (No AI API Key found)")
                 
                 for res in response.results:
+                    img_html = ""
+                    if getattr(res, "image_url", None):
+                        img_html = f'<img src="{res.image_url}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;" />'
+                    
+                    zomato_link = ""
+                    if getattr(res, "url", None):
+                        zomato_link = f'<div style="margin-top: 12px;"><a href="{res.url}" target="_blank" style="display: block; text-align: center; background: linear-gradient(90deg, #FF5252, #D37B20); color: white; padding: 8px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; font-weight: bold;">View on Zomato</a></div>'
+
                     st.markdown(f"""
                     <div class="restaurant-card">
+                        {img_html}
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <h3 style="margin: 0; color: #FF5252;">{res.name}</h3>
                             <span class="rating-badge">★ {res.rating}</span>
@@ -139,8 +159,10 @@ def main():
                         <div class="explanation-box">
                             <p class="explanation-text">"{res.explanation}"</p>
                         </div>
+                        {zomato_link}
                     </div>
                     """, unsafe_allow_html=True)
+
     else:
         # Hero Section
         st.markdown("---")
