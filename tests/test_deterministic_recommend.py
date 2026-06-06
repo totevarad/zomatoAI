@@ -156,3 +156,67 @@ def test_cap_limits_pool_but_count_full(tmp_path: Path) -> None:
     resp = deterministic_recommend(store, body, settings=settings)
     assert resp.meta.candidate_count == 25
     assert len(resp.results) == 10
+
+
+def test_deduplicate_by_name(tmp_path: Path) -> None:
+    db = tmp_path / "dedup.sqlite"
+    rows = [
+        RestaurantRecord(
+            restaurant_id="d1",
+            name="Dindigul Thalappakatti",
+            location="Indiranagar, Bangalore",
+            cuisine="Biryani",
+            rating=4.3,
+            cost_band=BudgetBand.medium,
+            url="url1",
+        ),
+        RestaurantRecord(
+            restaurant_id="d2",
+            name="Dindigul Thalappakatti",
+            location="Old Airport Road, Bangalore",
+            cuisine="Biryani",
+            rating=4.1,
+            cost_band=BudgetBand.medium,
+            url="url2",
+        ),
+        RestaurantRecord(
+            restaurant_id="d3",
+            name="Dindigul Thalappakatti",
+            location="Koramangala, Bangalore",
+            cuisine="Biryani",
+            rating=4.5,
+            cost_band=BudgetBand.medium,
+            url="url3",
+        ),
+        RestaurantRecord(
+            restaurant_id="other",
+            name="Empire Restaurant",
+            location="Indiranagar, Bangalore",
+            cuisine="Biryani",
+            rating=4.2,
+            cost_band=BudgetBand.medium,
+            url="url4",
+        ),
+    ]
+    write_sqlite(db, rows)
+    store = RestaurantStore(db)
+    settings = Settings(_env_file=None, database_path=str(db), recommend_candidate_cap=10)
+    body = RecommendRequest(
+        location="Bangalore",
+        budget=BudgetBand.medium,
+        cuisine="Biryani",
+        min_rating=4.0,
+        top_n=5,
+    )
+    resp = deterministic_recommend(store, body, settings=settings)
+    # The duplicate name "Dindigul Thalappakatti" should be collapsed to the highest-rated copy (rating 4.5, id "d3")
+    # Total unique candidates: 2 (Dindigul Thalappakatti and Empire Restaurant)
+    assert resp.meta.candidate_count == 2
+    assert len(resp.results) == 2
+    
+    # Check that highest rated "Dindigul Thalappakatti" (d3 with rating 4.5) is returned
+    results_dict = {r.restaurant_id: r for r in resp.results}
+    assert "d3" in results_dict
+    assert "d2" not in results_dict
+    assert "d1" not in results_dict
+    assert "other" in results_dict

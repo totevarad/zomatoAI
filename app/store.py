@@ -75,7 +75,8 @@ class RestaurantStore:
         Hard filters: substring on location and cuisine (case-insensitive), exact cost_band, rating >= min_rating.
 
         Returns (total_match_count, capped_ordered_rows). Ordering: rating DESC, cost_band high→medium→low, name ASC.
-        Uses instr() instead of LIKE so user input cannot inject wildcards.
+        Deduplicates by restaurant name (case-insensitive) to ensure only unique restaurants are returned,
+        keeping the highest-rated copy of each.
         """
         if not self.exists():
             return 0, []
@@ -96,27 +97,31 @@ class RestaurantStore:
                 CASE cost_band WHEN 'high' THEN 3 WHEN 'medium' THEN 2 ELSE 1 END DESC,
                 name ASC
         """
-        params_count = (loc, cui, budget.value, min_rating)
-        params_fetch = (*params_count, cap)
+        params = (loc, cui, budget.value, min_rating)
 
         conn = self._connect()
         try:
-            cur = conn.execute(f"SELECT COUNT(*) FROM restaurants WHERE {where}", params_count)
-            total = int(cur.fetchone()[0])
-            if total == 0:
-                return 0, []
             cur = conn.execute(
                 f"""
                 SELECT restaurant_id, name, location, cuisine, rating, cost_band, url, image_url
                 FROM restaurants
                 WHERE {where}
                 {order}
-                LIMIT ?
                 """,
-                params_fetch,
+                params,
             )
-            rows = [_row_to_record(t) for t in cur.fetchall()]
-            return total, rows
+            
+            rows = []
+            seen_names = set()
+            for t in cur.fetchall():
+                rec = _row_to_record(t)
+                norm_name = rec.name.strip().lower()
+                if norm_name not in seen_names:
+                    seen_names.add(norm_name)
+                    if len(rows) < cap:
+                        rows.append(rec)
+            
+            return len(seen_names), rows
         finally:
             conn.close()
 
