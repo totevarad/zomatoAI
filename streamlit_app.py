@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from pathlib import Path
 from app.config import get_settings
 from app.store import RestaurantStore
@@ -7,72 +8,49 @@ from app.schemas import RecommendRequest, BudgetBand
 
 # --- Page Config ---
 st.set_page_config(
-    page_title="Zomato AI Recommender",
+    page_title="Zomato AI",
     page_icon="🍽️",
     layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
-# --- App Styling ---
+# --- Hide Streamlit Header, Footer, and make iframe full viewport ---
 st.markdown("""
 <style>
-    .stApp {
-        background-color: #121212;
-        color: #E0E0E0;
+    /* Hide Streamlit branding and navigation */
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    div[data-testid="stDecoration"] {display: none;}
+    div[data-testid="stHeader"] {display: none;}
+    
+    /* Reset padding/margin of block container */
+    .main .block-container {
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
+        padding-left: 0px !important;
+        padding-right: 0px !important;
+        max-width: 100% !important;
+        height: 100vh !important;
     }
-    [data-testid="stSidebar"] {
-        background-color: #1E1E1E;
-    }
-    .main-header {
-        font-size: 3rem;
-        font-weight: 800;
-        background: linear-gradient(90deg, #FF5252, #FF8A80);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.5rem;
-    }
-    .sub-header {
-        font-size: 1.2rem;
-        color: #BDBDBD;
-        margin-bottom: 2rem;
-    }
-    .restaurant-card {
-        background-color: #1E1E1E;
-        padding: 1.5rem;
-        border-radius: 12px;
-        border: 1px solid #333;
-        margin-bottom: 1rem;
-        transition: all 0.3s ease;
-    }
-    .restaurant-card:hover {
-        border-color: #FF5252;
-        transform: translateY(-3px);
-        box-shadow: 0 4px 20px rgba(255, 82, 82, 0.15);
-    }
-    .rating-badge {
-        background-color: #4CAF50;
-        color: white;
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-weight: 700;
-        font-size: 0.9rem;
-    }
-    .cuisine-tag {
-        color: #9E9E9E;
-        font-size: 0.9rem;
-        margin-top: 4px;
-    }
-    .explanation-box {
-        background-color: rgba(255, 82, 82, 0.05);
-        border-left: 3px solid #FF5252;
-        padding: 10px 15px;
-        margin-top: 12px;
-        border-radius: 0 4px 4px 0;
-    }
-    .explanation-text {
-        font-style: italic;
-        color: #FFAB91;
-        font-size: 0.95rem;
+    
+    /* Full screen iframe styling */
+    iframe[title*="zomato_ai_dashboard"] {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw !important;
+        height: 100vh !important;
+        border: none;
         margin: 0;
+        padding: 0;
+        z-index: 999999;
+        background-color: #131313;
+    }
+    
+    /* Hide scrollbar of the parent body */
+    body {
+        overflow: hidden !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -80,110 +58,70 @@ st.markdown("""
 # --- App Logic ---
 settings = get_settings()
 db_path = Path(settings.database_path)
+
+# Automatically run ingest if SQLite DB does not exist
+if not db_path.is_file():
+    with st.spinner("⏳ First-time setup: Ingesting dataset from Hugging Face... (takes a few seconds)"):
+        try:
+            from app.ingest import ingest_to_sqlite
+            ingest_to_sqlite(db_path, settings)
+        except Exception as e:
+            st.error(f"Failed to ingest dataset: {e}")
+
+# Initialize store
 store = RestaurantStore(db_path)
 
-def main():
-    # Automatically run ingest if SQLite DB does not exist
-    if not db_path.is_file():
-        with st.spinner("⏳ First-time setup: Ingesting dataset from Hugging Face... (takes a few seconds)"):
-            try:
-                from app.ingest import ingest_to_sqlite
-                ingest_to_sqlite(db_path, settings)
-            except Exception as e:
-                st.error(f"Failed to ingest dataset: {e}")
+# Initialize recommendations and request tracking in session state
+if "recommendations" not in st.session_state:
+    st.session_state.recommendations = None
+if "last_request_id" not in st.session_state:
+    st.session_state.last_request_id = None
 
-    st.markdown('<div class="main-header">Zomato AI</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-header">Hyper-personalized restaurant recommendations grounded in data.</div>', unsafe_allow_html=True)
+# Declare custom component pointing to static/
+_my_component = components.declare_component(
+    "zomato_ai_dashboard",
+    path=str(Path(__file__).parent / "static")
+)
 
+# Render component
+val = _my_component(results=st.session_state.recommendations)
 
-    # --- Sidebar Filters ---
-    with st.sidebar:
-        st.markdown("### 🔍 Search Filters")
-        
-        location = st.text_input("Area in Bangalore", value="Banashankari", help="e.g. Indiranagar, Koramangala")
-        cuisine = st.text_input("Cuisine", value="Chinese", help="e.g. North Indian, Italian")
-        budget = st.selectbox("Budget Range", options=["low", "medium", "high"], index=1)
-        
-        st.markdown("---")
-        st.markdown("### 🛠️ Advanced")
-        top_n = st.number_input("Recommendations count", min_value=1, max_value=20, value=5)
-        min_rating = st.slider("Minimum Rating", min_value=0.0, max_value=5.0, value=3.5, step=0.1)
-        extra_context = st.text_area("AI Context", placeholder="e.g. quiet place for a date, family friendly", help="Optional: helps the AI explain why these match your vibe.")
-
-        st.markdown("---")
-        search_clicked = st.button("Find My Next Meal", type="primary", use_container_width=True)
-
-    # --- Results ---
-    if search_clicked:
-        with st.spinner("✨ Curating your personalized list..."):
+# Handle recommendation requests from frontend
+if val and val.get("action") == "recommend":
+    request_id = val.get("requestId")
+    # Only process if this request has a new ID
+    if request_id != st.session_state.last_request_id:
+        st.session_state.last_request_id = request_id
+        req_data = val.get("data", {})
+        try:
             request_body = RecommendRequest(
-                location=location,
-                cuisine=cuisine,
-                budget=BudgetBand(budget),
-                top_n=top_n,
-                min_rating=min_rating,
-                notes=extra_context
+                location=req_data.get("location"),
+                cuisine=req_data.get("cuisine"),
+                budget=BudgetBand(req_data.get("budget")),
+                top_n=int(req_data.get("top_n", 5)),
+                min_rating=float(req_data.get("min_rating", 3.5)),
+                notes=req_data.get("notes") or None
             )
-
             
+            # Get recommendations
             response = deterministic_recommend(store, request_body, settings=settings)
             
-            if not response.results:
-                st.error("😕 " + (response.meta.message or "No restaurants found matching your criteria."))
-                st.info("Try broadening your search or lowering the minimum rating.")
+            # Serialize response to JSON dict safely
+            if hasattr(response, "model_dump"):
+                serialized_results = response.model_dump(mode="json")
             else:
-                st.success(f"🎉 Found {response.meta.candidate_count} matches!")
+                serialized_results = response.dict()
                 
-                if response.meta.phase == "llm":
-                    st.caption(f"🧠 AI-Powered Ranking: {response.meta.model}")
-                else:
-                    st.caption("⚖️ Deterministic Ranking (No AI API Key found)")
-                
-                for res in response.results:
-                    img_html = ""
-                    if getattr(res, "image_url", None):
-                        img_html = f'<img src="{res.image_url}" style="width: 100%; height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;" />'
-                    
-                    zomato_link = ""
-                    if getattr(res, "url", None):
-                        zomato_link = f'<div style="margin-top: 12px;"><a href="{res.url}" target="_blank" style="display: block; text-align: center; background: linear-gradient(90deg, #FF5252, #D37B20); color: white; padding: 8px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; font-weight: bold;">View on Zomato</a></div>'
-
-                    st.markdown(f"""
-                    <div class="restaurant-card">
-                        {img_html}
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3 style="margin: 0; color: #FF5252;">{res.name}</h3>
-                            <span class="rating-badge">★ {res.rating}</span>
-                        </div>
-                        <div class="cuisine-tag">{res.cuisine} • {res.cost_band.value.capitalize()} Budget</div>
-                        <div class="explanation-box">
-                            <p class="explanation-text">"{res.explanation}"</p>
-                        </div>
-                        {zomato_link}
-                    </div>
-                    """, unsafe_allow_html=True)
-
-    else:
-        # Hero Section
-        st.markdown("---")
-        col1, col2 = st.columns([2, 1])
-        with col1:
-            st.markdown("""
-            ### Welcome to the future of dining! 🚀
-            
-            This recommender uses:
-            - **Real Data**: 40,000+ cleaned Zomato Bangalore entries.
-            - **Hard Filters**: Precise matching on location, cuisine, and budget.
-            - **AI Ranking**: (Optional) Groq-powered natural language explanations.
-            
-            **How to start:**
-            1. Enter your preferred **Area** and **Cuisine** in the sidebar.
-            2. Adjust your **Budget** and **Rating** thresholds.
-            3. Add **Extra Context** if you want the AI to personalize the "Why".
-            4. Click **Find My Next Meal**!
-            """)
-        with col2:
-            st.image("https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=1000", caption="Bangalore Dining Scene")
-
-if __name__ == "__main__":
-    main()
+            st.session_state.recommendations = serialized_results
+            st.rerun()
+        except Exception as e:
+            st.session_state.recommendations = {
+                "results": [],
+                "meta": {
+                    "candidate_count": 0,
+                    "model": None,
+                    "phase": "deterministic",
+                    "message": f"Error compiling recommendations: {e}"
+                }
+            }
+            st.rerun()

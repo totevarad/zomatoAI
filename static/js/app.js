@@ -125,27 +125,43 @@ document.addEventListener('DOMContentLoaded', () => {
             top_n: parseInt(formData.get('top_n'))
         };
 
-        try {
-            const response = await fetch('/recommend', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-
-            if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.detail || 'Failed to fetch recommendations');
-            }
-
-            const result = await response.json();
-            renderResults(result);
+        if (window.parent && window.parent !== window) {
+            // Communicate with Streamlit
+            window.parent.postMessage({
+                isStreamlitMessage: true,
+                type: "streamlit:setComponentValue",
+                value: {
+                    action: "recommend",
+                    requestId: Date.now(),
+                    data: data
+                }
+            }, "*");
             // On mobile, automatically close the filter drawer when showing results
             closeSidebar();
-        } catch (error) {
-            console.error('Error:', error);
-            showError(error.message);
+        } else {
+            // Standalone FastAPI mode fallback
+            try {
+                const response = await fetch('/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.detail || 'Failed to fetch recommendations');
+                }
+
+                const result = await response.json();
+                renderResults(result);
+                // On mobile, automatically close the filter drawer when showing results
+                closeSidebar();
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message);
+            }
         }
     });
 
@@ -267,5 +283,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         showState('results');
+    }
+
+    // Streamlit custom component message handler
+    window.addEventListener("message", (event) => {
+        if (event.data && event.data.type === "streamlit:render") {
+            const args = event.data.args;
+            if (args && args.results) {
+                renderResults(args.results);
+            } else if (args && args.results === null) {
+                showState('initial');
+            }
+        }
+    });
+
+    // Notify Streamlit component is ready
+    if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+            isStreamlitMessage: true,
+            type: "streamlit:componentReady",
+            apiVersion: 1,
+        }, "*");
     }
 });
