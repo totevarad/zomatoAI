@@ -35,6 +35,10 @@ class RestaurantResult(BaseModel):
     rating: float
     cost_band: BudgetBand
     explanation: str = ""
+    url: str | None = None
+    image_url: str | None = None
+
+
 
 
 class RecommendMeta(BaseModel):

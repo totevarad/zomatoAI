@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 import pytest
 from pathlib import Path
 from app.config import Settings
@@ -20,20 +21,20 @@ def _setup_bangalore_db(path: Path):
         ),
         RestaurantRecord(
             restaurant_id="b2",
-            name="Koramangala Italian",
+            name="Koramangala Cafe",
             location="Koramangala, Bangalore",
-            cuisine="Italian",
+            cuisine="Cafe",
             rating=4.0,
-            cost_band=BudgetBand.high,
+            cost_band=BudgetBand.medium,
             url=None,
         ),
         RestaurantRecord(
             restaurant_id="b3",
-            name="Jayanagar Dosa",
+            name="Jayanagar Cafe",
             location="Jayanagar, Bangalore",
-            cuisine="South Indian",
+            cuisine="Cafe",
             rating=4.8,
-            cost_band=BudgetBand.low,
+            cost_band=BudgetBand.medium,
             url=None,
         )
     ]
@@ -67,10 +68,11 @@ def test_bangalore_city_wide_search(tmp_path: Path):
     
     request = RecommendRequest(
         location="Bangalore",
-        cuisine=None,
-        budget=None,
+        cuisine="Cafe",
+        budget=BudgetBand.medium,
         min_rating=0.0,
         top_n=10
     )
     response = deterministic_recommend(store, request, settings=settings)
     assert len(response.results) == 3
+

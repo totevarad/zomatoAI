@@ -1,124 +1,378 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zomato AI Recommender</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Zomato AI Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        /* Custom scrollbar for glassmorphic elements */
+        .glass-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .glass-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.01);
+        }
+        .glass-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+        }
+        .glass-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        /* Fix white-on-white text inside select dropdown options */
+        select {
+            color-scheme: dark !important;
+        }
+        select option {
+            background-color: #131313 !important;
+            color: #e5e2e1 !important;
+        }
+
+
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#ff5352",
+                        "on-secondary": "#4c2700",
+                        "outline": "#ab8986",
+                        "primary-fixed-dim": "#ffb3ae",
+                        "on-tertiary-container": "#2a2a2a",
+                        "on-primary": "#68000b",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "tertiary": "#c8c6c5",
+                        "on-background": "#e5e2e1",
+                        "surface-tint": "#ffb3ae",
+                        "tertiary-container": "#929090",
+                        "on-secondary-container": "#432100",
+                        "primary-fixed": "#ffdad7",
+                        "on-surface": "#e5e2e1",
+                        "on-error": "#690005",
+                        "secondary-fixed": "#ffdcc2",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-dim": "#131313",
+                        "surface": "#131313",
+                        "secondary": "#ffb77a",
+                        "on-tertiary": "#313030",
+                        "secondary-container": "#d37b20",
+                        "error-container": "#93000a",
+                        "primary": "#ffb3ae",
+                        "surface-container-highest": "#353534",
+                        "tertiary-fixed": "#e5e2e1",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "surface-container-high": "#2a2a2a",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed": "#2e1500",
+                        "on-tertiary-fixed": "#1c1b1b",
+                        "inverse-on-surface": "#313030",
+                        "surface-container-lowest": "#0e0e0e",
+                        "background": "#131313",
+                        "error": "#ffb4ab",
+                        "outline-variant": "#5b403e",
+                        "on-surface-variant": "#e4beba",
+                        "inverse-primary": "#ba1724",
+                        "inverse-surface": "#e5e2e1",
+                        "on-primary-container": "#5c0008",
+                        "surface-container": "#201f1f",
+                        "surface-variant": "#353534",
+                        "on-primary-fixed-variant": "#930014",
+                        "on-secondary-fixed-variant": "#6d3a00",
+                        "on-primary-fixed": "#410004",
+                        "secondary-fixed-dim": "#ffb77a",
+                        "surface-bright": "#3a3939"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "20px",
+                        "sm": "8px",
+                        "xs": "4px",
+                        "margin-desktop": "40px",
+                        "margin-mobile": "16px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "unit": "4px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "title-md": ["Geist"],
+                        "label-caps": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "headline-lg-mobile": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "body-sm": ["Geist"],
+                        "display-lg": ["Geist"]
+                    },
+                    "fontSize": {
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body>
-    <div class="app-container">
-        <header>
-            <div class="logo">
-                <span class="logo-z">Z</span>
-                <span class="logo-text">omato AI</span>
+<body class="bg-background text-on-background font-body-lg min-h-screen flex selection:bg-primary-container selection:text-white overflow-x-hidden">
+    
+    <!-- Mobile Backdrop Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-35 hidden md:hidden transition-all duration-300"></div>
+
+    <!-- SideNavBar / Form Panel Component -->
+    <nav id="sidebar-nav" class="fixed md:sticky left-0 top-0 h-screen w-[280px] bg-white/5 backdrop-blur-lg border-r border-white/5 shadow-2xl z-40 flex flex-col py-6 transform -translate-x-full md:translate-x-0 transition-transform duration-300">
+        <!-- Header (Mobile close only) -->
+        <div class="px-6 mb-2 flex items-center justify-end md:hidden">
+            <button id="sidebar-close-btn" class="text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center p-1">
+                <span class="material-symbols-outlined text-[24px]">close</span>
+            </button>
+        </div>
+
+        <!-- Scrollable Form Container -->
+        <div class="flex-1 overflow-y-auto px-6 space-y-5 glass-scrollbar">
+            <form id="recommend-form" class="space-y-4">
+                
+                <!-- Location Dropdown -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Area in Bangalore</label>
+                    <div class="flex items-center bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-on-surface-variant focus-within:border-primary-container transition-all">
+                        <span class="material-symbols-outlined text-[18px] mr-2 text-on-surface-variant">location_on</span>
+                        <select id="location" name="location" required class="bg-transparent border-none text-on-surface font-body-sm text-body-sm focus:ring-0 w-full p-0 cursor-pointer [color-scheme:dark]">
+                            <option value="Indiranagar" selected>Indiranagar</option>
+                            <option value="Koramangala">Koramangala</option>
+                            <option value="Jayanagar">Jayanagar</option>
+                            <option value="JP Nagar">JP Nagar</option>
+                            <option value="BTM">BTM Layout</option>
+                            <option value="HSR">HSR Layout</option>
+                            <option value="Banashankari">Banashankari</option>
+                            <option value="Basavanagudi">Basavanagudi</option>
+                            <option value="Whitefield">Whitefield</option>
+                            <option value="Marathahalli">Marathahalli</option>
+                            <option value="Bellandur">Bellandur</option>
+                            <option value="Malleshwaram">Malleshwaram</option>
+                            <option value="Ulsoor">Ulsoor</option>
+                            <option value="Kalyan Nagar">Kalyan Nagar</option>
+                            <option value="Rajajinagar">Rajajinagar</option>
+                            <option value="Electronic City">Electronic City</option>
+                            <option value="Sarjapur Road">Sarjapur Road</option>
+                            <option value="MG Road">MG Road</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Cuisine Input -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Cuisine Focus</label>
+                    <div class="flex items-center bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-on-surface-variant focus-within:border-primary-container transition-all">
+                        <span class="material-symbols-outlined text-[18px] mr-2">restaurant</span>
+                        <input type="text" id="cuisine" name="cuisine" class="bg-transparent border-none text-on-surface font-body-sm text-body-sm focus:ring-0 w-full p-0 placeholder-on-surface-variant" placeholder="e.g. North Indian, Italian" required value="Italian"/>
+                    </div>
+                    <!-- Quick Select Badges -->
+                    <div class="flex flex-wrap gap-1.5 mt-1" id="cuisine-pills">
+                        <span class="px-2.5 py-0.5 bg-white/5 border border-white/10 rounded-full font-body-sm text-[12px] text-on-surface-variant cursor-pointer hover:border-primary-container hover:text-on-surface transition-colors" data-value="Italian">Italian</span>
+                        <span class="px-2.5 py-0.5 bg-white/5 border border-white/10 rounded-full font-body-sm text-[12px] text-on-surface-variant cursor-pointer hover:border-primary-container hover:text-on-surface transition-colors" data-value="Chinese">Chinese</span>
+                        <span class="px-2.5 py-0.5 bg-white/5 border border-white/10 rounded-full font-body-sm text-[12px] text-on-surface-variant cursor-pointer hover:border-primary-container hover:text-on-surface transition-colors" data-value="Cafe">Cafe</span>
+                        <span class="px-2.5 py-0.5 bg-white/5 border border-white/10 rounded-full font-body-sm text-[12px] text-on-surface-variant cursor-pointer hover:border-primary-container hover:text-on-surface transition-colors" data-value="Desserts">Desserts</span>
+                    </div>
+                </div>
+
+                <!-- Budget Slider Control -->
+                <div class="flex flex-col gap-1.5">
+                    <div class="flex justify-between items-center">
+                        <label class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Budget (Approx. for two)</label>
+                        <span id="budget-value-display" class="bg-primary-container/20 text-primary border border-primary-container/30 px-2 py-0.5 rounded font-label-caps text-[11px] font-bold">₹800 (Med)</span>
+                    </div>
+                    <div class="flex items-center gap-2 py-1">
+                        <input type="range" id="budget-slider" min="100" max="10000" step="50" value="800" class="w-full accent-primary-container bg-white/10 h-1.5 rounded-lg cursor-pointer"/>
+                    </div>
+                    <!-- Hidden input to submit the budget band -->
+                    <input type="hidden" id="budget" name="budget" value="medium" />
+                </div>
+
+                <!-- Min Rating Range Slider -->
+                <div class="flex flex-col gap-1.5">
+                    <div class="flex justify-between items-center">
+                        <label class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Minimum Rating</label>
+                        <span id="rating-value" class="bg-primary-container/20 text-primary border border-primary-container/30 px-2 py-0.5 rounded font-label-caps text-[11px] font-bold">3.5</span>
+                    </div>
+                    <div class="flex items-center gap-2 py-1">
+                        <input type="range" id="min_rating" name="min_rating" min="0" max="5" step="0.5" value="3.5" class="w-full accent-primary-container bg-white/10 h-1.5 rounded-lg cursor-pointer"/>
+                    </div>
+                </div>
+
+                <!-- Top N Selector -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Recommendations Count</label>
+                    <div class="flex items-center bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-on-surface-variant focus-within:border-primary-container transition-all">
+                        <span class="material-symbols-outlined text-[18px] mr-2">format_list_numbered</span>
+                        <input type="number" id="top_n" name="top_n" min="1" max="20" value="5" class="bg-transparent border-none text-on-surface font-body-sm text-body-sm focus:ring-0 w-full p-0"/>
+                    </div>
+                </div>
+
+                <!-- Extra Context notes -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">AI Context / Wishes</label>
+                    <textarea id="notes" name="notes" class="bg-black/30 border border-white/10 rounded-lg p-3 text-on-surface font-body-sm text-body-sm focus:ring-1 focus:ring-primary-container focus:border-primary-container placeholder-on-surface-variant h-20 resize-none text-[13px]" placeholder="e.g. family-friendly, quick lunch, cozy ambiance, organic wine..."></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2">
+                    <button type="submit" id="submit-btn" class="w-full bg-gradient-to-r from-primary-container to-secondary-container text-white py-3 rounded-lg font-label-caps text-[12px] uppercase tracking-wider flex items-center justify-center shadow-lg hover:shadow-primary-container/20 hover:opacity-90 active:scale-[0.98] transition-all duration-300">
+                        Get Recommendations
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="px-6 mt-4 pt-4 border-t border-white/10 space-y-3">
+            <div class="flex items-center gap-4 text-on-surface-variant">
+                <a class="flex items-center gap-3 text-on-surface-variant hover:text-on-surface transition-colors" href="https://huggingface.co/datasets/ManikaSaini/zomato-restaurant-recommendation" target="_blank">
+                    <span class="material-symbols-outlined text-[18px]">database</span>
+                    <span class="font-body-sm text-[12px]">Hugging Face Dataset</span>
+                </a>
             </div>
-            <p class="tagline">Hyper-personalized restaurant recommendations grounded in data.</p>
+        </div>
+    </nav>
+
+    <!-- Main Content Canvas -->
+    <main class="flex-1 flex flex-col min-h-screen relative w-full overflow-y-auto">
+        <!-- TopNavBar Component -->
+        <header class="flex justify-between items-center w-full px-6 md:px-10 h-20 sticky top-0 z-30 bg-surface/60 backdrop-blur-xl border-b border-white/5 shadow-sm">
+            <div class="flex items-center gap-3">
+                <!-- Mobile Filter Toggle Button -->
+                <button id="mobile-filter-btn" class="md:hidden text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center p-2 rounded bg-white/5 border border-white/10">
+                    <span class="material-symbols-outlined text-[20px]">tune</span>
+                </button>
+                <h1 class="font-display-lg text-[22px] md:text-[28px] font-bold bg-gradient-to-r from-primary-container to-secondary-container bg-clip-text text-transparent tracking-tight">Zomato AI</h1>
+            </div>
+            
+            <!-- Top search bar removed -->
+            <div class="flex-1"></div>
+
+            <!-- Top Actions -->
+            <div class="flex items-center gap-4 text-on-surface-variant ml-4">
+                <div class="hidden sm:flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/5 rounded-full text-[12px] font-body-sm">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    <span>Database Live</span>
+                </div>
+            </div>
         </header>
 
-        <main>
-            <aside class="preferences-panel">
-                <div class="panel-header">
-                    <i data-lucide="sliders-horizontal"></i>
-                    <h2>Preferences</h2>
-                </div>
+        <!-- Page Content -->
+        <div class="p-6 md:p-10 space-y-6 flex-1 flex flex-col">
+            
+            <!-- Dynamic State Panels (Welcome, Loading, Error, or Results Header) -->
+            <div class="flex-1 flex flex-col">
                 
-                <form id="recommend-form">
-                    <div class="form-group">
-                        <label for="location">Area in Bangalore</label>
-                        <div class="input-wrapper">
-                            <i data-lucide="map-pin"></i>
-                            <input type="text" id="location" name="location" placeholder="e.g. Indiranagar, Koramangala" required>
-                        </div>
-                        <small class="hint">Note: Currently only supporting Bangalore city.</small>
+                <!-- Results Header -->
+                <div id="results-header" class="hidden flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6 border-b border-white/10 pb-4">
+                    <div>
+                        <h2 class="font-headline-lg-mobile md:font-headline-lg text-[20px] md:text-[24px] text-on-surface font-bold">Curated Recommendations</h2>
+                        <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Grounded recommendations ranking your top matches.</p>
                     </div>
-
-                    <div class="form-group">
-                        <label for="cuisine">Cuisine</label>
-                        <div class="input-wrapper">
-                            <i data-lucide="utensils"></i>
-                            <input type="text" id="cuisine" name="cuisine" placeholder="e.g. North Indian, Italian">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="budget">Budget</label>
-                            <select id="budget" name="budget">
-                                <option value="low">Low</option>
-                                <option value="medium" selected>Medium</option>
-                                <option value="high">High</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="top_n">Top N</label>
-                            <input type="number" id="top_n" name="top_n" value="5" min="1" max="20">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="min_rating">Minimum Rating</label>
-                        <div class="range-container">
-                            <input type="range" id="min_rating" name="min_rating" min="0" max="5" step="0.5" value="3.5">
-                            <span id="rating-value">3.5</span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="notes">Extra Context (for AI)</label>
-                        <textarea id="notes" name="notes" placeholder="e.g. Looking for a quiet place for a date, or spicy food lovers."></textarea>
-                    </div>
-
-                    <button type="submit" id="submit-btn">
-                        <span>Get Recommendations</span>
-                        <i data-lucide="sparkles"></i>
-                    </button>
-                </form>
-            </aside>
-
-            <section class="results-section">
-                <div id="results-header" class="hidden">
-                    <h2 id="results-title">Your Recommendations</h2>
-                    <span id="candidate-count"></span>
-                </div>
-
-                <div id="loading-state" class="hidden">
-                    <div class="spinner"></div>
-                    <p>AI is analyzing the menu...</p>
-                </div>
-
-                <div id="initial-state">
-                    <div class="welcome-card">
-                        <i data-lucide="search" class="welcome-icon"></i>
-                        <h3>Ready to find your next favorite spot?</h3>
-                        <p>Fill in your preferences on the left and our AI will search thousands of restaurants to find the perfect match for you.</p>
+                    <div class="flex items-center gap-3">
+                        <span id="candidate-count" class="text-[12px] font-label-caps text-on-surface-variant px-3 py-1.5 bg-white/5 border border-white/10 rounded-full"></span>
                     </div>
                 </div>
 
-                <div id="error-state" class="hidden">
-                    <div class="error-card">
-                        <i data-lucide="alert-circle"></i>
-                        <h3 id="error-title">Oops! Something went wrong</h3>
-                        <p id="error-message"></p>
-                        <button onclick="location.reload()">Retry</button>
+                <!-- Initial/Welcome State -->
+                <div id="initial-state" class="flex-1 flex items-center justify-center py-12">
+                    <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 max-w-lg text-center flex flex-col items-center gap-5 shadow-2xl">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-r from-primary-container/20 to-secondary-container/20 flex items-center justify-center text-primary-container border border-primary-container/30">
+                            <span class="material-symbols-outlined text-[32px] font-bold">restaurant_menu</span>
+                        </div>
+                        <div>
+                            <h3 class="font-title-md text-[20px] text-on-surface font-semibold mb-2">Ready to discover culinary gems?</h3>
+                            <p class="font-body-sm text-on-surface-variant leading-relaxed">
+                                Enter your preferred location, cuisine, and budget on the left sidebar. Our AI Concierge will scan thousands of rows in the Bangalore dataset to find your perfect spots.
+                            </p>
+                        </div>
+                        <div class="w-full grid grid-cols-2 gap-3 pt-2">
+                            <div class="bg-black/20 border border-white/5 rounded-xl p-3 text-left">
+                                <span class="material-symbols-outlined text-primary text-[20px] mb-1">security</span>
+                                <h4 class="font-body-sm text-[13px] font-semibold text-on-surface">100% Grounded</h4>
+                                <p class="text-[11px] text-on-surface-variant mt-0.5">No hallucinated restaurants or menus.</p>
+                            </div>
+                            <div class="bg-black/20 border border-white/5 rounded-xl p-3 text-left">
+                                <span class="material-symbols-outlined text-secondary text-[20px] mb-1">hotel_class</span>
+                                <h4 class="font-body-sm text-[13px] font-semibold text-on-surface">AI Smart Ranked</h4>
+                                <p class="text-[11px] text-on-surface-variant mt-0.5">Matches recommendations to your vibes.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div id="results-container">
-                    <!-- Restaurant cards will be injected here -->
+                <!-- Loading State -->
+                <div id="loading-state" class="hidden flex-1 flex flex-col items-center justify-center py-20 gap-4">
+                    <div class="relative w-16 h-16">
+                        <!-- Outer rotating border -->
+                        <div class="absolute inset-0 rounded-full border-4 border-primary-container/20 border-t-primary-container animate-spin"></div>
+                        <!-- Inner pulse element -->
+                        <div class="absolute inset-2 rounded-full bg-gradient-to-r from-primary-container to-secondary-container opacity-40 animate-pulse"></div>
+                    </div>
+                    <div class="text-center">
+                        <p class="font-title-md text-[18px] text-on-surface font-medium animate-pulse">AI Concierge is analyzing recommendations...</p>
+                        <p class="text-[12px] text-on-surface-variant mt-1.5">Filtering store candidates and executing Groq completions</p>
+                    </div>
                 </div>
-            </section>
-        </main>
-    </div>
+
+                <!-- Error State -->
+                <div id="error-state" class="hidden flex-1 flex items-center justify-center py-12">
+                    <div class="bg-white/5 backdrop-blur-md border border-red-500/20 rounded-2xl p-8 max-w-md text-center flex flex-col items-center gap-4 shadow-2xl">
+                        <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-400 border border-red-500/30">
+                            <span class="material-symbols-outlined text-[28px]">warning</span>
+                        </div>
+                        <div>
+                            <h3 id="error-title" class="font-title-md text-[18px] text-on-surface font-semibold mb-1">Recommendation Error</h3>
+                            <p id="error-message" class="font-body-sm text-on-surface-variant leading-relaxed text-[13px]">
+                                We couldn't fetch recommendations. Please check your inputs.
+                            </p>
+                        </div>
+                        <button onclick="location.reload()" class="px-5 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-on-surface text-[13px] font-medium transition-colors">
+                            Dismiss & Retry
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Grid -->
+                <div id="results-container" class="hidden grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <!-- Cards injected dynamically here -->
+                </div>
+
+            </div>
+
+        </div>
+    </main>
 
     <script src="/static/js/app.js"></script>
-    <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
-    </script>
 </body>
 </html>

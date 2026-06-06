@@ -13,3 +13,5 @@ class RestaurantRecord(BaseModel):
     rating: float
     cost_band: BudgetBand
     url: str | None = Field(default=None, description="Source Zomato URL when present.")
+    image_url: str | None = Field(default=None, description="Scraped Zomato image URL when present.")
+

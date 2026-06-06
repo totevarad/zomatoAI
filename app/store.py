@@ -14,7 +14,17 @@ class RestaurantStore:
         self.db_path = db_path
 
     def _connect(self) -> sqlite3.Connection:
-        return sqlite3.connect(self.db_path, check_same_thread=False)
+        conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT image_url FROM restaurants LIMIT 1")
+        except sqlite3.OperationalError:
+            try:
+                conn.execute("ALTER TABLE restaurants ADD COLUMN image_url TEXT")
+                conn.commit()
+            except Exception:
+                pass
+        return conn
 
     def exists(self) -> bool:
         return self.db_path.is_file()
@@ -40,7 +50,7 @@ class RestaurantStore:
         try:
             cur = conn.execute(
                 """
-                SELECT restaurant_id, name, location, cuisine, rating, cost_band, url
+                SELECT restaurant_id, name, location, cuisine, rating, cost_band, url, image_url
                 FROM restaurants
                 WHERE lower(location) LIKE '%' || ? || '%'
                 ORDER BY rating DESC
@@ -97,7 +107,7 @@ class RestaurantStore:
                 return 0, []
             cur = conn.execute(
                 f"""
-                SELECT restaurant_id, name, location, cuisine, rating, cost_band, url
+                SELECT restaurant_id, name, location, cuisine, rating, cost_band, url, image_url
                 FROM restaurants
                 WHERE {where}
                 {order}
@@ -110,9 +120,28 @@ class RestaurantStore:
         finally:
             conn.close()
 
+    def update_image_url(self, restaurant_id: str, image_url: str) -> None:
+        if not self.exists():
+            return
+        conn = self._connect()
+        try:
+            conn.execute(
+                "UPDATE restaurants SET image_url = ? WHERE restaurant_id = ?",
+                (image_url, restaurant_id),
+            )
+            conn.commit()
+        except Exception:
+            pass
+        finally:
+            conn.close()
+
 
 def _row_to_record(t: tuple) -> RestaurantRecord:
-    rid, name, location, cuisine, rating, cost_band, url = t
+    if len(t) == 8:
+        rid, name, location, cuisine, rating, cost_band, url, image_url = t
+    else:
+        rid, name, location, cuisine, rating, cost_band, url = t
+        image_url = None
     return RestaurantRecord(
         restaurant_id=rid,
         name=name,
@@ -121,4 +150,6 @@ def _row_to_record(t: tuple) -> RestaurantRecord:
         rating=float(rating),
         cost_band=BudgetBand(cost_band),
         url=url,
+        image_url=image_url,
     )
+

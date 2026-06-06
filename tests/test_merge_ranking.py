@@ -14,7 +14,7 @@ def _rec(rid: str, name: str, rating: float) -> RestaurantRecord:
         cuisine="Chinese",
         rating=rating,
         cost_band=BudgetBand.medium,
-        url=None,
+        url=f"http://zomato.com/{rid}",
     )
 
 
@@ -35,8 +35,12 @@ def test_merge_respects_llm_order_and_grounds() -> None:
     )
     assert [r.restaurant_id for r in out] == ["c", "b", "a"]
     assert out[0].explanation == "Why c"
+    assert out[0].url == "http://zomato.com/c"
     assert out[1].explanation == "Why b"
+    assert out[1].url == "http://zomato.com/b"
     assert out[2].explanation == "fb"
+    assert out[2].url == "http://zomato.com/a"
+
 
 
 def test_unknown_ids_only_use_pool_order() -> None:

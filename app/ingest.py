@@ -110,6 +110,7 @@ def raw_row_to_record(row: dict) -> RestaurantRecord | None:
         rating=rating,
         cost_band=_cost_to_band(cost_val),
         url=url,
+        image_url=None,
     )
 
 
@@ -124,7 +125,8 @@ def _init_schema(conn: sqlite3.Connection) -> None:
             cuisine TEXT NOT NULL,
             rating REAL NOT NULL,
             cost_band TEXT NOT NULL,
-            url TEXT
+            url TEXT,
+            image_url TEXT
         );
         CREATE INDEX IF NOT EXISTS idx_restaurants_location_lower
             ON restaurants (lower(location));
@@ -143,8 +145,8 @@ def write_sqlite(db_path: Path, records: list[RestaurantRecord]) -> None:
         _init_schema(conn)
         conn.executemany(
             """
-            INSERT INTO restaurants (restaurant_id, name, location, cuisine, rating, cost_band, url)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO restaurants (restaurant_id, name, location, cuisine, rating, cost_band, url, image_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 (
@@ -155,6 +157,7 @@ def write_sqlite(db_path: Path, records: list[RestaurantRecord]) -> None:
                     r.rating,
                     r.cost_band.value,
                     r.url,
+                    r.image_url,
                 )
                 for r in records
             ],
@@ -162,6 +165,7 @@ def write_sqlite(db_path: Path, records: list[RestaurantRecord]) -> None:
         conn.commit()
     finally:
         conn.close()
+
 
 
 def ingest_to_sqlite(db_path: Path, settings: Settings | None = None) -> tuple[int, int]:

@@ -70,6 +70,10 @@ def merge_ranked_with_pool(
                 rating=rec.rating,
                 cost_band=rec.cost_band,
                 explanation=expl,
+                url=rec.url,
+                image_url=rec.image_url,
             )
+
         )
     return out
+
